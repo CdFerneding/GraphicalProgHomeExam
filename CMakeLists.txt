@@ -60,3 +60,7 @@ add_subdirectory(framework)
 # Add a subdirectory for assignments. Like the framework, this is commented out,
 # potentially to be enabled later when assignments are ready.
 add_subdirectory(assignment)
+
+# Add a subdirectory for homeexam. Like the framework, this is commented out,
+# potentially to be enabled later when assignments are ready.
+add_subdirectory(homeexam)

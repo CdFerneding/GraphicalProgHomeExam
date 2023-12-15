@@ -3,9 +3,44 @@
 
 #include <array>
 #include <vector>
+#include <iostream>
 #include "../../external/glm/glm/ext/matrix_transform.hpp"
 
 namespace GeometricTools {
+
+    std::vector<float> WarehouseGeometry(const unsigned int divisions) {
+        std::vector<float> vertices;
+        int count = 0;
+
+        for (int i = 0; i <= divisions; ++i) {
+            float xPos = (i / static_cast<float>(divisions)) * 2 - 1.0f;
+
+            for (int j = 0; j <= divisions; ++j) {
+                float yPos = (j / static_cast<float>(divisions)) * 2 - 1.0f;
+
+                // Position
+                vertices.push_back(xPos);
+                vertices.push_back(yPos);
+                vertices.push_back(0.0f); // Set z-coordinate to 0 for a 2D grid
+
+                // Color (in rgba format)
+                vertices.push_back((count % 2 == 0) ? 1.0 : 0.0);
+                vertices.push_back((count % 2 == 0) ? 1.0 : 0.0);
+                vertices.push_back((count % 2 == 0) ? 1.0 : 0.0);
+                vertices.push_back(1.0);
+
+                // Texture Coordinates
+                vertices.push_back((xPos + 1) / 2);
+                vertices.push_back((yPos + 1) / 2);
+
+                count++;
+            }
+        }
+
+        return vertices;
+    }
+
+
     constexpr std::array<float, 3*2> UnitTriangle2D = {-0.5f, -0.5f, 0.5f, -0.5f, 0.0f, 0.5f}; // [2,3]
 
     constexpr std::array<float, 5*4> UnitSquare2D = {
@@ -29,16 +64,17 @@ namespace GeometricTools {
 
     constexpr std::array<unsigned int, 6> TopologySquare2D = {0, 1, 2, 0, 2, 3}; // [6]
 
-    // Constexpr version that generates the geometry of the grid, including texture coordinates
-    // The shape of the generated data is PPTTPPTTPPTT..., meaning two components for position
-    // and two components for texture coordinates.
+
+    /* generate dynamic grid with 9 attributes: 3 positions, 4 colors, 2 texture coordinates */
     auto UnitGridGeometry2DWTCoords(const unsigned int divisions) {
         std::vector<float> vertices;
         int count = 0;
         for (int i = 0; i <= divisions; ++i) {
             float xPos = (i / static_cast<float>(divisions)) * 2 - 1.0f;
+            xPos = static_cast<float>(std::round(xPos * 100.0)) / 100.0f;
             for (int j = 0; j <= divisions; ++j) {
                 float yPos = (j / static_cast<float>(divisions)) * 2 - 1.0f;
+                yPos = static_cast<float>(std::round(yPos * 100.0)) / 100.0f;
                 vertices.push_back(xPos);
                 vertices.push_back(yPos);
                 vertices.push_back(0.0f); // Set z-coordinate to 0 for a 2D grid
@@ -56,8 +92,10 @@ namespace GeometricTools {
         }
         for (int i = 0; i <= divisions; ++i) {
             float xPos = (i / static_cast<float>(divisions)) * 2 - 1.0f;
+            xPos = static_cast<float>(std::round(xPos * 100.0)) / 100.0f;
             for (int j = 0; j <= divisions; ++j) {
                 float yPos = (j / static_cast<float>(divisions)) * 2 - 1.0f;
+                yPos = static_cast<float>(std::round(yPos * 100.0)) / 100.0f;
                 vertices.push_back(xPos);
                 vertices.push_back(yPos);
                 vertices.push_back(0.0f); // Set z-coordinate to 0 for a 2D grid
@@ -73,6 +111,7 @@ namespace GeometricTools {
                 //std::cout << xPos << ", " << yPos << ", 1.0, 1.0, 1.0, 1.0, 1.0" << std::endl;
             }
         }
+        std::cout << count << std::endl;
         //convert grid to std array
         return vertices;
     }
@@ -141,13 +180,13 @@ namespace GeometricTools {
 
         // Generate indices for triangles that form the grid
         bool isWhite;
+        int offset = (divisions + 1) * (divisions + 1);
         for (unsigned int i = 0; i < divisions; i++) {
             for (unsigned int j = 0; j < divisions; j++) {
                 //(divisions+1) * (divisions+1)
                 // Calculate the indices for the four vertices of each quad
                 isWhite = (i%2==j%2);
 
-                //It will add 384
                 unsigned int topLeft = i * (divisions + 1) + j;
                 unsigned int topRight = topLeft + 1;
                 unsigned int bottomLeft = (i + 1) * (divisions + 1) + j;
@@ -155,14 +194,14 @@ namespace GeometricTools {
 
                 // Define two triangles for each quad
                 // Triangle 1: top left -> top right -> bottom left
-                indices.push_back(topLeft+ (isWhite ? 81: 0));
-                indices.push_back(topRight+ (isWhite ? 81: 0));
-                indices.push_back(bottomLeft+ (isWhite ? 81: 0));
+                indices.push_back(topLeft+ (isWhite ? offset : 0));
+                indices.push_back(topRight+ (isWhite ? offset : 0));
+                indices.push_back(bottomLeft+ (isWhite ? offset : 0));
 
                 // Triangle 2: top right -> bottom right -> bottom left
-                indices.push_back(topRight+ (isWhite ? 81: 0));
-                indices.push_back(bottomRight+ (isWhite ? 81: 0));
-                indices.push_back(bottomLeft+ (isWhite ? 81: 0));
+                indices.push_back(topRight+ (isWhite ? offset : 0));
+                indices.push_back(bottomRight+ (isWhite ? offset : 0));
+                indices.push_back(bottomLeft+ (isWhite ? offset : 0));
                 //std::cout << topLeft << " " << topRight << " " << bottomLeft << " " << topRight << " " << bottomRight << " " << bottomLeft << std::endl;
             }
         }
