@@ -32,7 +32,7 @@ private:
     };
     std::vector<TileInfo> GridState; 
     glm::vec3 boxColor = glm::vec3(181.0f /255.0f, 101.0f /255.0f, 29.0f /255.0f); // light brown
-    glm::vec3 boxCorrectPosColor = glm::vec3(181.0f / 255.0f, 101.0f / 255.0f, 29.0f / 255.0f); // yellow
+    glm::vec3 boxCorrectPosColor = glm::vec3(1.0f, 1.0f, 0.0f); // yellow
     glm::vec3 boxDestColor = glm::vec3(0.0f, 1.0f, 0.0f); // green
     // color for walls and pillars
     glm::vec3 wallsColor = glm::vec3(54.0f / 255.0f, 34.0f / 255.0f, 4.0f / 255.0f); // dark brown

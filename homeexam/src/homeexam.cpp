@@ -95,22 +95,88 @@ void HomeExamApplication::setTextureState() {
  */
 void HomeExamApplication::move(Direction direction) {
     hasMoved = true;
+    TileInfo nextTile;
+    TileInfo* nextTileAfter = nullptr;
     switch (direction) {
     case UP:
-        // minus two because of indexing (+1) and the warehousewall (+1)
-        if (currentYSelected == numberOfSquare - 2) break;
+        // +1 does not need to be checked (for index out of bounds exeption) because of the ring of walls around the grids
+        nextTile = GridState[currentXSelected * 10 + currentYSelected + 1];
+        if (currentYSelected < 8) {
+            nextTileAfter = &GridState[currentXSelected * 10 + currentYSelected + 2];
+        }
+        if (nextTile.hasObstacle || nextTile.hasPillar) break;
+        if (nextTile.hasBox) {
+            if (nextTileAfter == nullptr) {
+                break;
+            }
+            else if (!nextTileAfter->hasBox && !nextTileAfter->hasObstacle && !nextTileAfter->hasPillar) {
+                GridState[currentXSelected * 10 + currentYSelected + 1].hasBox = false;
+                GridState[currentXSelected * 10 + currentYSelected + 2].hasBox = true;
+            }
+            else {
+                break;
+            }
+        }
         currentYSelected++;
         break;
     case DOWN:
-        if (currentYSelected == 1) break;
+        nextTile = GridState[currentXSelected * 10 + currentYSelected - 1];
+        if (currentYSelected > 1) {
+            nextTileAfter = &GridState[currentXSelected * 10 + currentYSelected - 2];
+        }
+        if (nextTile.hasObstacle || nextTile.hasPillar) break;
+        if (nextTile.hasBox) {
+            if (nextTileAfter == nullptr) {
+                break;
+            }
+            else if (!nextTileAfter->hasBox && !nextTileAfter->hasObstacle && !nextTileAfter->hasPillar) {
+                GridState[currentXSelected * 10 + currentYSelected - 1].hasBox = false;
+                GridState[currentXSelected * 10 + currentYSelected - 2].hasBox = true;
+            }
+            else {
+                break;
+            }
+        }
         currentYSelected--;
         break;
     case LEFT:
-        if (currentXSelected == numberOfSquare - 2) break;
+        nextTile = GridState[(currentXSelected + 1) * 10 + currentYSelected];
+        if (currentXSelected < 8) {
+            nextTileAfter = &GridState[(currentXSelected + 2) * 10 + currentYSelected];
+        }
+        if (nextTile.hasObstacle || nextTile.hasPillar) break;
+        if (nextTile.hasBox) {
+            if (nextTileAfter == nullptr) {
+                break;
+            }
+            else if (!nextTileAfter->hasBox && !nextTileAfter->hasObstacle && !nextTileAfter->hasPillar) {
+                GridState[(currentXSelected + 1) * 10 + currentYSelected].hasBox = false;
+                GridState[(currentXSelected + 2) * 10 + currentYSelected].hasBox = true;
+            }
+            else {
+                break;
+            }
+        }
         currentXSelected++;
         break;
     case RIGHT:
-        if (currentXSelected == 1) break;
+        nextTile = GridState[(currentXSelected - 1) * 10 + currentYSelected];
+        if (currentXSelected > 1) {
+            nextTileAfter = &GridState[(currentXSelected - 2) * 10 + currentYSelected];
+        }
+        if (nextTile.hasObstacle || nextTile.hasPillar) break;
+        if (nextTile.hasBox) {
+            if (nextTileAfter == nullptr) {
+                break;
+            }
+            else if (!nextTileAfter->hasBox && !nextTileAfter->hasObstacle && !nextTileAfter->hasPillar) {
+                GridState[(currentXSelected - 1) * 10 + currentYSelected].hasBox = false;
+                GridState[(currentXSelected - 2) * 10 + currentYSelected].hasBox = true;
+            }
+            else {
+                break;
+            }
+        }
         currentXSelected--;
         break;
     default:
@@ -408,23 +474,6 @@ unsigned HomeExamApplication::Run() {
             glm::vec3 currentColor;
             float unitOpacity = 1;
 
-            if (tile.hasBox) {
-                currentColor = boxColor;
-            }
-            else if (tile.hasObstacle) {
-                currentColor = wallsColor;
-                unitOpacity = 0.98;
-            }
-            else if (tile.hasPillar) {
-                currentColor = pillarCollor;
-            }
-            else if (tile.hasBoxDest) {
-                currentColor = boxDestColor;
-            }
-            else {
-                continue;
-            }
-
             glm::vec2 currentPosition = tile.currentPos;
 
             // helper
@@ -432,23 +481,40 @@ unsigned HomeExamApplication::Run() {
             float targetXOffset = sideLength / 2 + 4 * sideLength;
             float targetYOffset = sideLength / 2 - 5 * sideLength;
 
-            // transforming and scaling units
             cubeModel = glm::mat4(1.0f);
             float translationX = targetXOffset - sideLength * currentPosition[0];
             float translationY = targetYOffset + sideLength * currentPosition[1];
-            if (tile.hasBox) cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, sideLength / 4));
-            else cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, (tile.hasBoxDest) ? 0 : sideLength / 2));
-            if (tile.hasPillar) {
-                cubeModel = glm::scale(cubeModel, glm::vec3(0.5, 0.5, 1.0)); 
+
+            // colloring, transforming and scaling units according to GridState
+            if (tile.hasBoxDest) {
+                currentColor = boxDestColor; 
+                cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, 0));
+                cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.8, 0.1)); 
             }
-            else if (tile.hasBoxDest) {
-                cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.8, 0.1));
+            if (tile.hasBox) {
+                currentColor = boxColor;
+                cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, sideLength / 4));
+                cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.8, 0.6));
             }
-            else if (tile.hasObstacle) {
+            if (tile.hasObstacle) {
+                currentColor = wallsColor;
+                unitOpacity = 0.98;
+                cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, sideLength / 2));
                 cubeModel = glm::scale(cubeModel, glm::vec3(0.98, 0.98, 1.0)); 
             }
-            else if (tile.hasBox) {
-                cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.8, 0.6));
+            if (tile.hasPillar) {
+                currentColor = pillarCollor;
+                cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, sideLength / 2));
+                cubeModel = glm::scale(cubeModel, glm::vec3(0.5, 0.5, 1.0));
+            }
+            if (tile.hasBox && tile.hasBoxDest) {
+                cubeModel = glm::mat4(1.0f); 
+                cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, sideLength / 4)); 
+                cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.8, 0.6)); 
+                currentColor = boxCorrectPosColor;
+            }
+            if (!tile.hasObstacle && !tile.hasPillar && !tile.hasBox && !tile.hasBoxDest) {
+                continue;
             }
 
 
@@ -466,7 +532,7 @@ unsigned HomeExamApplication::Run() {
 
         //--------------------------------------------------------------------------------------------------------------
         //
-        // square processing
+        // player processing
         //
         //--------------------------------------------------------------------------------------------------------------
         float squareOpacity = 1.0f;
