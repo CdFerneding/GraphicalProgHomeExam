@@ -90,6 +90,9 @@ void HomeExamApplication::setTextureState() {
     toggleTexture = (toggleTexture == 0.0f) ? 1.0f : 0.0f;
 }
 
+/*current X Selected goes from 0 to numberOfSquares-1 -> [0,9]
+  same for Y Selected. 
+ */
 void HomeExamApplication::move(Direction direction) {
     hasMoved = true;
     switch (direction) {
@@ -128,7 +131,8 @@ void HomeExamApplication::zoom(float zoomValue) {
 
 void HomeExamApplication::setupWarehouse(int numOfPillars, int numOfBoxes, int numOfBoxDest)
 {
-    //std::vector<TileInfo> freeTiles;
+    // Seed the random number generator with the current time
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
     for (int x = 0; x < 10; ++x) {
         for (int y = 0; y < 10; ++y) {
             TileInfo tile;
@@ -164,8 +168,9 @@ void HomeExamApplication::setupWarehouse(int numOfPillars, int numOfBoxes, int n
     // place boxes
     int boxCounter = 0;
     while (boxCounter < numOfBoxes) {
-        int randomX = rand() % 8 + 1;
-        int randomY = rand() % 8 + 1;
+        // make box the only object in the game that spawns within 6x6 grid to make the game solvable (since you are only allowed to push boxes)
+        int randomX = rand() % 6 + 2;
+        int randomY = rand() % 6 + 2;
         int tileIndex = randomX * 10 + randomY;
         if (!GridState[tileIndex].hasObstacle && !GridState[tileIndex].hasPillar && !GridState[tileIndex].hasBox) {
             GridState[tileIndex].hasBox = true;
@@ -189,9 +194,11 @@ void HomeExamApplication::setupWarehouse(int numOfPillars, int numOfBoxes, int n
             // freeTiles.erase(freeTiles.begin() + tileIndex);  not the same index as GridState
         }
     }
-    // place player
+    
+    // place player in the warehouse
     bool wasPlayerPlaced = false;
-    while (wasPlayerPlaced == false) {
+    while (!wasPlayerPlaced) {
+        // number between 1 and 8 (rand()%8 -> [0,7]) for tile index (the same as currently Selected variables)
         int randomX = rand() % 8 + 1;
         int randomY = rand() % 8 + 1;
         int tileIndex = randomX * 10 + randomY;
@@ -318,7 +325,7 @@ unsigned HomeExamApplication::Run() {
     // Use PerspectiveCamera class instead
     camera = PerspectiveCamera(
         PerspectiveCamera::Frustrum{ glm::radians(45.0f), 1.0f, 1.0f, 1.0f, 10.0f }, // frustrum
-        glm::vec3(0.0f, -3.0f, 3.0f), // camera position
+        glm::vec3(0.0f, -3.0f, 3.5f), // camera position
         glm::vec3(0.0f, 0.0f, 0.0f), // lookAt
         glm::vec3(0.0f, 0.0f, 1.0f) // upVector
     );
@@ -395,7 +402,8 @@ unsigned HomeExamApplication::Run() {
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Grid);
 
         // draw all obstacles, boxes and box Destinations according to the vector GridState
-        for (TileInfo tile : GridState) {
+        for (int tileIndex = 0; tileIndex < GridState.size(); tileIndex++) {
+            TileInfo tile = GridState[tileIndex];
             // unit information
             glm::vec3 currentColor;
             float unitOpacity = 1;
@@ -405,10 +413,10 @@ unsigned HomeExamApplication::Run() {
             }
             else if (tile.hasObstacle) {
                 currentColor = wallsColor;
-                unitOpacity = 0.99;
+                unitOpacity = 0.98;
             }
             else if (tile.hasPillar) {
-                currentColor = wallsColor;
+                currentColor = pillarCollor;
             }
             else if (tile.hasBoxDest) {
                 currentColor = boxDestColor;
@@ -428,18 +436,19 @@ unsigned HomeExamApplication::Run() {
             cubeModel = glm::mat4(1.0f);
             float translationX = targetXOffset - sideLength * currentPosition[0];
             float translationY = targetYOffset + sideLength * currentPosition[1];
-            cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, (tile.hasBoxDest) ? 0 : sideLength / 2));
+            if (tile.hasBox) cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, sideLength / 4));
+            else cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, (tile.hasBoxDest) ? 0 : sideLength / 2));
             if (tile.hasPillar) {
                 cubeModel = glm::scale(cubeModel, glm::vec3(0.5, 0.5, 1.0)); 
             }
             else if (tile.hasBoxDest) {
-                cubeModel = glm::scale(cubeModel, glm::vec3(0.9, 0.9, 0.1));
+                cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.8, 0.1));
             }
             else if (tile.hasObstacle) {
                 cubeModel = glm::scale(cubeModel, glm::vec3(0.98, 0.98, 1.0)); 
             }
             else if (tile.hasBox) {
-                cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.7, 0.8));
+                cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.8, 0.6));
             }
 
 
@@ -457,31 +466,23 @@ unsigned HomeExamApplication::Run() {
 
         //--------------------------------------------------------------------------------------------------------------
         //
-        // player processing
+        // square processing
         //
         //--------------------------------------------------------------------------------------------------------------
-        float playerOpacity = 1.0f;
-        if (hasMoved) {
-            // helper
-            float sideLength = 2.0f / static_cast<float>(numberOfSquare);
-            // HINT: board position (0,0) is the bottom Right
-            float bottomRight = numberOfSquare * sideLength - 1;
+        float squareOpacity = 1.0f;
 
-            // translating square
-            cubeModel = glm::mat4(1.0f);
-            // HINT: from our perspective the x movement works inverted in relation to the board coordinates
-            float translationX = bottomRight - sideLength / 2 - currentXSelected * sideLength;
-            float translationY = bottomRight + sideLength / 2 - sideLength * numberOfSquare + currentYSelected * sideLength;
-            cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, sideLength / 2));
-            cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.9, 0.8));
+        // helper
+        float sideLength = 2.0f / static_cast<float>(numberOfSquare);
+        // HINT: board position (0,0) is the bottom Right
+        float bottomRight = numberOfSquare * sideLength - 1;
 
-            hasMoved = false;
-            bool isOccupied = false;
-            int tile = currentXSelected * 10 + currentYSelected;
-            if (GridState[tile].hasObstacle || GridState[tile].hasBox) isOccupied = true; // boxDest does not count as occupied
-            
-            std::cout << "current X: " << currentXSelected << "\tcurrent Y: " << currentYSelected << "\tis current Tile occupied? " << isOccupied << std::endl;
-        }
+        // translating square
+        cubeModel = glm::mat4(1.0f);
+        // HINT: from our perspective the x movement works inverted in relation to the board coordinates
+        float translationX = bottomRight - sideLength / 2 - currentXSelected * sideLength;
+        float translationY = bottomRight + sideLength / 2 - sideLength * numberOfSquare + currentYSelected * sideLength;
+        cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, 0.001));
+        cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.8, 0.9));
 
         // bind square buffer, upload square uniforms and draw square
         VAO_Cube->Bind();
@@ -490,7 +491,7 @@ unsigned HomeExamApplication::Run() {
         shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
         shaderCube->UploadUniformFloat3("u_Color", playerColor);
-        shaderCube->UploadUniformFloat1("u_Opacity", playerOpacity);
+        shaderCube->UploadUniformFloat1("u_Opacity", squareOpacity);
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube);
 
         // Swap front and back buffers

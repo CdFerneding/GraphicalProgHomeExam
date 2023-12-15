@@ -36,6 +36,7 @@ private:
     glm::vec3 boxDestColor = glm::vec3(0.0f, 1.0f, 0.0f); // green
     // color for walls and pillars
     glm::vec3 wallsColor = glm::vec3(54.0f / 255.0f, 34.0f / 255.0f, 4.0f / 255.0f); // dark brown
+    glm::vec3 pillarCollor = glm::vec3(54.0f / 255.0f, 34.0f / 255.0f, 50.0f / 255.0f);
     glm::vec3 playerColor = glm::vec3(0.0f, 0.0f, 1.0f);
     
     void setupWarehouse(int numOfPillars = 6, int numOfBoxes = 6, int numOfBoxDest = 6);

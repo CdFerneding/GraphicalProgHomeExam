@@ -111,7 +111,6 @@ namespace GeometricTools {
                 //std::cout << xPos << ", " << yPos << ", 1.0, 1.0, 1.0, 1.0, 1.0" << std::endl;
             }
         }
-        std::cout << count << std::endl;
         //convert grid to std array
         return vertices;
     }
