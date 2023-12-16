@@ -1,9 +1,9 @@
 #include <string>
-#ifndef HOMEEXAM_UNIT_H
-#define HOMEEXAM_UNIT_H
+#ifndef HOMEEXAM_CUBE_H
+#define HOMEEXAM_CUBE_H
 
 // Vertex and fragment shader source code
-const std::string VS_Unit = R"(
+const std::string VS_Cube = R"(
     #version 430 core
     layout(location = 0) in vec3 position;
     layout(location = 1) in vec3 aNormal;
@@ -27,7 +27,7 @@ const std::string VS_Unit = R"(
     }
 )";
 
-const std::string FS_Unit = R"(
+const std::string FS_Cube = R"(
     #version 430 core
 
     in vec3 TexCoords;
@@ -43,13 +43,14 @@ const std::string FS_Unit = R"(
     uniform vec3 u_LightColor;
     uniform vec3 u_LightPosition;
     uniform vec3 u_ViewPos;
+    uniform float u_LightIntensity;
 
     out vec4 color;
     
     void main()
     {
         // ambient lighting
-        float ambientStrength = 0.1;
+        float ambientStrength = 0.3;
         vec3 ambient = ambientStrength * u_LightColor;
 
         // diffuse lighting
@@ -65,7 +66,7 @@ const std::string FS_Unit = R"(
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32); // last param (of pow) definies the "shininess": the higher the shinier
         vec3 specular = specularStrength * spec * u_LightColor;
 
-        vec3 colorAfterLighting = (ambient + diffuse + specular) * u_Color;
+        vec3 colorAfterLighting = (ambient + diffuse + specular) * u_Color * u_LightIntensity;
 
         if(u_TextureState != 0.0f) {
              //Sample the texture using the texture coordinates
@@ -77,4 +78,4 @@ const std::string FS_Unit = R"(
     }
 )";
 
-#endif //HOMEEXAM_UNIT_H
+#endif //HOMEEXAM_CUBE_H
