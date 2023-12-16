@@ -31,8 +31,7 @@ HomeExamApplication::HomeExamApplication(const std::string& name, const std::str
     currentYSelected = 0;
 
     hasMoved = false;
-    moveUnitFrom = { -1, -1 };
-    isUnitSelected = false;
+    moveCounter = 0;
 
     toggleTexture = 0.0f;
 }
@@ -120,6 +119,7 @@ void HomeExamApplication::move(Direction direction) {
             }
         }
         currentYSelected++;
+        moveCounter++;
         break;
     case DOWN:
         nextTile = GridState[currentXSelected * 10 + currentYSelected - 1];
@@ -140,6 +140,7 @@ void HomeExamApplication::move(Direction direction) {
             }
         }
         currentYSelected--;
+        moveCounter++;
         break;
     case LEFT:
         nextTile = GridState[(currentXSelected + 1) * 10 + currentYSelected];
@@ -160,6 +161,7 @@ void HomeExamApplication::move(Direction direction) {
             }
         }
         currentXSelected++;
+        moveCounter++;
         break;
     case RIGHT:
         nextTile = GridState[(currentXSelected - 1) * 10 + currentYSelected];
@@ -180,6 +182,7 @@ void HomeExamApplication::move(Direction direction) {
             }
         }
         currentXSelected--;
+        moveCounter++;
         break;
     default:
         hasMoved = false;
@@ -297,14 +300,57 @@ std::vector<float> HomeExamApplication::unitCubeGeometry() const {
 
     // cube centered around origin in relation to the gridSquareSize
     std::vector<float> selectionCube = {
-        -halfSideLength, -halfSideLength, -halfSideLength,
+        /*-halfSideLength, -halfSideLength, -halfSideLength,
         -halfSideLength, halfSideLength, -halfSideLength,
         +halfSideLength, halfSideLength, -halfSideLength,
         halfSideLength, -halfSideLength, -halfSideLength,
         -halfSideLength, -halfSideLength, halfSideLength,
         -halfSideLength, halfSideLength, halfSideLength,
         halfSideLength, halfSideLength, halfSideLength,
-        halfSideLength, -halfSideLength, halfSideLength,
+        halfSideLength, -halfSideLength, halfSideLength,*/
+
+
+        -halfSideLength, -halfSideLength, -halfSideLength, 0.0f, 0.0f, -1.0f,
+        halfSideLength, -halfSideLength, -halfSideLength, 0.0f, 0.0f, -1.0f,
+        halfSideLength, halfSideLength, -halfSideLength, 0.0f, 0.0f, -1.0f,
+        halfSideLength, halfSideLength, -halfSideLength, 0.0f, 0.0f, -1.0f,
+        -halfSideLength, halfSideLength, -halfSideLength, 0.0f, 0.0f, -1.0f,
+        -halfSideLength, -halfSideLength, -halfSideLength, 0.0f, 0.0f, -1.0f,
+
+        -halfSideLength, -halfSideLength, halfSideLength, 0.0f, 0.0f, 1.0f,
+        halfSideLength, -halfSideLength, halfSideLength, 0.0f, 0.0f, 1.0f,
+        halfSideLength, halfSideLength, halfSideLength, 0.0f, 0.0f, 1.0f,
+        halfSideLength, halfSideLength, halfSideLength, 0.0f, 0.0f, 1.0f,
+        -halfSideLength, halfSideLength, halfSideLength, 0.0f, 0.0f, 1.0f,
+        -halfSideLength, -halfSideLength, halfSideLength, 0.0f, 0.0f, 1.0f,
+
+        -halfSideLength, halfSideLength, halfSideLength, -1.0f, 0.0f, 0.0f,
+        -halfSideLength, halfSideLength, -halfSideLength, -1.0f, 0.0f, 0.0f,
+        -halfSideLength, -halfSideLength, -halfSideLength, -1.0f, 0.0f, 0.0f,
+        -halfSideLength, -halfSideLength, -halfSideLength, -1.0f, 0.0f, 0.0f,
+        -halfSideLength, -halfSideLength, halfSideLength, -1.0f, 0.0f, 0.0f,
+        -halfSideLength, halfSideLength, halfSideLength, -1.0f, 0.0f, 0.0f,
+
+        halfSideLength, halfSideLength, halfSideLength, 1.0f, 0.0f, 0.0f,
+        halfSideLength, halfSideLength, -halfSideLength, 1.0f, 0.0f, 0.0f,
+        halfSideLength, -halfSideLength, -halfSideLength, 1.0f, 0.0f, 0.0f,
+        halfSideLength, -halfSideLength, -halfSideLength, 1.0f, 0.0f, 0.0f,
+        halfSideLength, -halfSideLength, halfSideLength, 1.0f, 0.0f, 0.0f,
+        halfSideLength, halfSideLength, halfSideLength, 1.0f, 0.0f, 0.0f,
+
+        -halfSideLength, -halfSideLength, -halfSideLength, 0.0f, -1.0f, 0.0f,
+        halfSideLength, -halfSideLength, -halfSideLength, 0.0f, -1.0f, 0.0f,
+        halfSideLength, -halfSideLength, halfSideLength, 0.0f, -1.0f, 0.0f,
+        halfSideLength, -halfSideLength, halfSideLength, 0.0f, -1.0f, 0.0f,
+        -halfSideLength, -halfSideLength, halfSideLength, 0.0f, -1.0f, 0.0f,
+        -halfSideLength, -halfSideLength, -halfSideLength, 0.0f, -1.0f, 0.0f,
+
+        -halfSideLength, halfSideLength, -halfSideLength, 0.0f, 1.0f, 0.0f,
+        halfSideLength, halfSideLength, -halfSideLength, 0.0f, 1.0f, 0.0f,
+        halfSideLength, halfSideLength, halfSideLength, 0.0f, 1.0f, 0.0f,
+        halfSideLength, halfSideLength, halfSideLength, 0.0f, 1.0f, 0.0f,
+        -halfSideLength, halfSideLength, halfSideLength, 0.0f, 1.0f, 0.0f,
+        -halfSideLength, halfSideLength, -halfSideLength, 0.0f, 1.0f, 0.0f
     };
     return selectionCube;
 }
@@ -336,12 +382,13 @@ unsigned HomeExamApplication::Run() {
     auto gridLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false},
         {ShaderDataType::Float4, "color", false},
-        {ShaderDataType::Float2, "texCoords", false}
+        {ShaderDataType::Float2, "texCoords", false},
         }));
 
     // cube Layout
     auto cubeLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false},
+        {ShaderDataType::Float3, "normal", false} // the norm vector (used for diffuse lighting)
         }));
 
     //--------------------------------------------------------------------------------------------------------------
@@ -393,7 +440,7 @@ unsigned HomeExamApplication::Run() {
     // Use PerspectiveCamera class instead
     camera = PerspectiveCamera(
         PerspectiveCamera::Frustrum{ glm::radians(45.0f), 1.0f, 1.0f, 1.0f, 10.0f }, // frustrum
-        glm::vec3(0.0f, -3.0f, 3.5f), // camera position
+        glm::vec3(0.0f, -1.8f, 2.4f), // camera position
         glm::vec3(0.0f, 0.0f, 0.0f), // lookAt
         glm::vec3(0.0f, 0.0f, 1.0f) // upVector
     );
@@ -442,9 +489,16 @@ unsigned HomeExamApplication::Run() {
 
     hasMoved = true;
     bool setup = true; // for units in first iteration
-    bool isOccupied = false;
+    bool isGameWon = false;
 
     setupWarehouse();
+
+    // lighting variables
+    float ambientStrength = 0.1;
+    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f); 
+    // place the light a bit to the right of where the player is looking from (at the start)
+    glm::vec3 lightPosition = glm::vec3(3.0f, -3.0f, 2.4f);
+
     while (!glfwWindowShouldClose(window))
     {
 
@@ -457,6 +511,25 @@ unsigned HomeExamApplication::Run() {
 
         //--------------------------------------------------------------------------------------------------------------
         //
+        // lighting
+        //
+        //--------------------------------------------------------------------------------------------------------------
+
+        // inside the corresponding shaders I added:
+        // 
+        // ambient lighting (simple form of global illumination)
+        // global illumination describes the fact that objects will often still have some light
+        // even if the don't see the light source directly due to reflection on other objects in the scene
+        // 
+        // diffuse lighting 
+        // lets a fragment shine brither the close it is to the light source: calculates the angle between vertex and light source
+        // the (non-uniform) scaling I am using does not affect the normal vectors because all objects are cubes. 
+        // The normal vectors for the grid shader will always be up (assuming the light source is above the grid))
+        //
+        // specular lighting takes the viewer Position into account
+
+        //--------------------------------------------------------------------------------------------------------------
+        //
         // warehouse processing
         //
         //--------------------------------------------------------------------------------------------------------------
@@ -466,6 +539,9 @@ unsigned HomeExamApplication::Run() {
         shaderGrid->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderGrid->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
         shaderGrid->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
+        shaderGrid->UploadUniformFloat3("u_LightColor", lightColor); 
+        shaderGrid->UploadUniformFloat3("u_LightPosition", lightPosition);
+        shaderGrid->UploadUniformFloat3("u_ViewPos", camera.GetPosition());
         shaderGrid->UploadUniform1i("u_Texture", gridTexture);
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Grid);
 
@@ -488,33 +564,39 @@ unsigned HomeExamApplication::Run() {
             float translationY = targetYOffset + sideLength * currentPosition[1];
 
             // colloring, transforming and scaling units according to GridState
+            // box destinations
             if (tile.hasBoxDest) {
                 currentColor = boxDestColor; 
                 cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, 0));
                 cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.8, 0.1)); 
             }
+            // boxes
             if (tile.hasBox) {
                 currentColor = boxColor;
                 cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, sideLength / 4));
                 cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.8, 0.6));
             }
+            // walls
             if (tile.hasObstacle) {
                 currentColor = wallsColor;
                 unitOpacity = 0.98;
                 cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, sideLength / 2));
                 cubeModel = glm::scale(cubeModel, glm::vec3(0.98, 0.98, 1.0)); 
             }
+            // pillars
             if (tile.hasPillar) {
                 currentColor = pillarCollor;
                 cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, sideLength / 2));
                 cubeModel = glm::scale(cubeModel, glm::vec3(0.5, 0.5, 1.0));
             }
+            // box on correct spot
             if (tile.hasBox && tile.hasBoxDest) {
                 cubeModel = glm::mat4(1.0f); 
                 cubeModel = glm::translate(cubeModel, glm::vec3(translationX, translationY, sideLength / 4)); 
                 cubeModel = glm::scale(cubeModel, glm::vec3(0.8, 0.8, 0.6)); 
                 currentColor = boxCorrectPosColor;
             }
+            // empty tiles
             if (!tile.hasObstacle && !tile.hasPillar && !tile.hasBox && !tile.hasBoxDest) {
                 continue;
             }
@@ -528,6 +610,9 @@ unsigned HomeExamApplication::Run() {
             shaderCube->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
             shaderCube->UploadUniformFloat1("u_Opacity", unitOpacity);
             shaderCube->UploadUniformFloat3("u_Color", currentColor);
+            shaderCube->UploadUniformFloat3("u_LightColor", lightColor); 
+            shaderCube->UploadUniformFloat3("u_LightPosition", lightPosition);
+            shaderCube->UploadUniformFloat3("u_ViewPos", camera.GetPosition());
             shaderCube->UploadUniform1i("CubeMap", unitTexture);
             RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube);
         }
@@ -559,8 +644,26 @@ unsigned HomeExamApplication::Run() {
         shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
         shaderCube->UploadUniformFloat3("u_Color", playerColor);
+        shaderCube->UploadUniformFloat3("u_LightColor", lightColor);
+        shaderCube->UploadUniformFloat3("u_LightPosition", lightPosition); 
+        shaderCube->UploadUniformFloat3("u_ViewPos", camera.GetPosition()); 
         shaderCube->UploadUniformFloat1("u_Opacity", squareOpacity);
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube);
+
+        //--------------------------------------------------------------------------------------------------------------
+        //
+        // check wincondition
+        //
+        //--------------------------------------------------------------------------------------------------------------
+        int correctBoxCounter = 0;
+        for (TileInfo tile : GridState) {
+            if (tile.hasBox && tile.hasBoxDest) correctBoxCounter++;
+            if (correctBoxCounter == 6 && !isGameWon) 
+            {
+                std::cout << "Won Game with " << moveCounter << " moves!" << std::endl;
+                isGameWon = true;
+            }
+        }
 
         // Swap front and back buffers
         glfwSwapBuffers(window);

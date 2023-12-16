@@ -44,6 +44,7 @@ private:
 
     unsigned int currentXSelected; // Current x position of the selector
     unsigned int currentYSelected; // Current y position of the selector
+    unsigned int moveCounter;
 
     PerspectiveCamera camera; //The perspective camera used
 
