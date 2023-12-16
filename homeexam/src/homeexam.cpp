@@ -18,6 +18,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <unordered_map>
 #include <iostream>
+// std::time should be standart cpp function, but the build pipeline does not seem to find it so:
+#include <ctime>
+#include <cstdlib> 
 
 HomeExamApplication* HomeExamApplication::current_application = nullptr;
 
