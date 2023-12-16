@@ -1,7 +1,8 @@
 #include "homeexam.h"
 // shader objects
 #include "shaders/grid.h"
-#include "shaders/unit.h"
+#include "shaders/cube.h"
+#include "shaders/sun.h"
 // rendering framework
 #include "GeometricTools.h"
 #include "IndexBuffer.h"
@@ -428,9 +429,12 @@ unsigned HomeExamApplication::Run() {
     shaderGrid->Bind();
 
     // cube shader
-    auto* shaderCube = new Shader(VS_Unit, FS_Unit);
+    auto* shaderCube = new Shader(VS_Cube, FS_Cube);
     shaderCube->Bind();
 
+    // sun shader
+    auto* shaderSun = new Shader(VS_Sun, FS_Sun);
+    shaderSun->Bind();
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -444,8 +448,6 @@ unsigned HomeExamApplication::Run() {
         glm::vec3(0.0f, 0.0f, 0.0f), // lookAt
         glm::vec3(0.0f, 0.0f, 1.0f) // upVector
     );
-
-
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -494,10 +496,10 @@ unsigned HomeExamApplication::Run() {
     setupWarehouse();
 
     // lighting variables
-    float ambientStrength = 0.1;
     glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f); 
     // place the light a bit to the right of where the player is looking from (at the start)
-    glm::vec3 lightPosition = glm::vec3(3.0f, -3.0f, 2.4f);
+    glm::vec3 lightPosition = glm::vec3(1.2f, 0.0f, 1.2f);
+    float ambientStrength = 1.0f;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -527,6 +529,16 @@ unsigned HomeExamApplication::Run() {
         // The normal vectors for the grid shader will always be up (assuming the light source is above the grid))
         //
         // specular lighting takes the viewer Position into account
+        
+        // change the light's position values over time (glfwGetTime returns the elapsed time in seconds)
+        float radius = 2.0f;
+        float rotationSpeed = 0.15f;
+        lightPosition.x = radius * cos(rotationSpeed * glfwGetTime());
+        lightPosition.z = radius * sin(rotationSpeed * glfwGetTime());
+
+        // set lightIntensity in relation to the sun's apex
+        if (ambientStrength >= 0.5) ambientStrength = (lightPosition.z + 2) / 4;
+
 
         //--------------------------------------------------------------------------------------------------------------
         //
@@ -539,6 +551,7 @@ unsigned HomeExamApplication::Run() {
         shaderGrid->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderGrid->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
         shaderGrid->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
+        shaderGrid->UploadUniformFloat1("u_AmbientStrength", ambientStrength);
         shaderGrid->UploadUniformFloat3("u_LightColor", lightColor); 
         shaderGrid->UploadUniformFloat3("u_LightPosition", lightPosition);
         shaderGrid->UploadUniformFloat3("u_ViewPos", camera.GetPosition());
@@ -601,13 +614,13 @@ unsigned HomeExamApplication::Run() {
                 continue;
             }
 
-
             VAO_Cube->Bind();
             shaderCube->Bind();
             shaderCube->UploadUniformMatrix4fv("u_Model", cubeModel * camera.GetViewProjectionMatrix());
             shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
             shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
             shaderCube->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
+            shaderCube->UploadUniformFloat1("u_AmbientStrength", ambientStrength);
             shaderCube->UploadUniformFloat1("u_Opacity", unitOpacity);
             shaderCube->UploadUniformFloat3("u_Color", currentColor);
             shaderCube->UploadUniformFloat3("u_LightColor", lightColor); 
@@ -643,12 +656,33 @@ unsigned HomeExamApplication::Run() {
         shaderCube->UploadUniformMatrix4fv("u_Model", cubeModel * camera.GetViewProjectionMatrix());
         shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+        shaderCube->UploadUniformFloat1("u_AmbientStrength", ambientStrength);
         shaderCube->UploadUniformFloat3("u_Color", playerColor);
         shaderCube->UploadUniformFloat3("u_LightColor", lightColor);
         shaderCube->UploadUniformFloat3("u_LightPosition", lightPosition); 
         shaderCube->UploadUniformFloat3("u_ViewPos", camera.GetPosition()); 
         shaderCube->UploadUniformFloat1("u_Opacity", squareOpacity);
         RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube);
+
+        //--------------------------------------------------------------------------------------------------------------
+        //
+        // processing sun (white cube)
+        //
+        //--------------------------------------------------------------------------------------------------------------
+
+        // translating and scaling the sun
+        cubeModel = glm::mat4(1.0f);
+        
+        cubeModel = glm::translate(cubeModel, lightPosition);
+        cubeModel = glm::scale(cubeModel, glm::vec3(0.4));
+        
+        // bind square buffer, upload square uniforms and draw square
+        VAO_Cube->Bind();
+        shaderSun->Bind();
+        shaderSun->UploadUniformMatrix4fv("u_Model", cubeModel* camera.GetViewProjectionMatrix());
+        shaderSun->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
+        shaderSun->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+        RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube); 
 
         //--------------------------------------------------------------------------------------------------------------
         //
