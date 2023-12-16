@@ -496,11 +496,10 @@ unsigned HomeExamApplication::Run() {
     setupWarehouse();
 
     // lighting variables
-    float ambientStrength = 0.1;
     glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f); 
     // place the light a bit to the right of where the player is looking from (at the start)
     glm::vec3 lightPosition = glm::vec3(1.2f, 0.0f, 1.2f);
-    float lightIntensity = 1.0f;
+    float ambientStrength = 1.0f;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -538,7 +537,7 @@ unsigned HomeExamApplication::Run() {
         lightPosition.z = radius * sin(rotationSpeed * glfwGetTime());
 
         // set lightIntensity in relation to the sun's apex
-        if (lightIntensity >= 0.4) lightIntensity = (lightPosition.z + 2) / 4;
+        if (ambientStrength >= 0.5) ambientStrength = (lightPosition.z + 2) / 4;
 
 
         //--------------------------------------------------------------------------------------------------------------
@@ -552,7 +551,7 @@ unsigned HomeExamApplication::Run() {
         shaderGrid->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderGrid->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
         shaderGrid->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
-        shaderGrid->UploadUniformFloat1("u_LightIntensity", lightIntensity); 
+        shaderGrid->UploadUniformFloat1("u_AmbientStrength", ambientStrength);
         shaderGrid->UploadUniformFloat3("u_LightColor", lightColor); 
         shaderGrid->UploadUniformFloat3("u_LightPosition", lightPosition);
         shaderGrid->UploadUniformFloat3("u_ViewPos", camera.GetPosition());
@@ -621,7 +620,7 @@ unsigned HomeExamApplication::Run() {
             shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
             shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
             shaderCube->UploadUniformFloat1("u_TextureState", static_cast<float>(toggleTexture));
-            shaderCube->UploadUniformFloat1("u_LightIntensity", lightIntensity);
+            shaderCube->UploadUniformFloat1("u_AmbientStrength", ambientStrength);
             shaderCube->UploadUniformFloat1("u_Opacity", unitOpacity);
             shaderCube->UploadUniformFloat3("u_Color", currentColor);
             shaderCube->UploadUniformFloat3("u_LightColor", lightColor); 
@@ -657,7 +656,7 @@ unsigned HomeExamApplication::Run() {
         shaderCube->UploadUniformMatrix4fv("u_Model", cubeModel * camera.GetViewProjectionMatrix());
         shaderCube->UploadUniformMatrix4fv("u_View", camera.GetViewMatrix());
         shaderCube->UploadUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-        shaderCube->UploadUniformFloat1("u_LightIntensity", lightIntensity); 
+        shaderCube->UploadUniformFloat1("u_AmbientStrength", ambientStrength);
         shaderCube->UploadUniformFloat3("u_Color", playerColor);
         shaderCube->UploadUniformFloat3("u_LightColor", lightColor);
         shaderCube->UploadUniformFloat3("u_LightPosition", lightPosition); 

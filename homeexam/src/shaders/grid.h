@@ -45,15 +45,14 @@ const std::string FS_Grid = R"(
     uniform vec3 u_LightColor;
     uniform vec3 u_LightPosition;
     uniform vec3 u_ViewPos;
-    uniform float u_LightIntensity;
+    uniform float u_AmbientStrength;
 
     out vec4 color;
     
     void main()
     {
         // ambient lighting
-        float ambientStrength = 0.3;
-        vec3 ambient = ambientStrength * u_LightColor;
+        vec3 ambient = u_AmbientStrength * u_LightColor;
 
         // diffuse lighting
         vec3 norm = normalize(Normal); // in case of scaling
@@ -68,7 +67,7 @@ const std::string FS_Grid = R"(
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32); // last param (of pow) definies the "shininess": the higher the shinier
         vec3 specular = specularStrength * spec * u_LightColor;
 
-        vec3 colorAfterLighting = (ambient + diffuse + specular) * fragColor.rgb * u_LightIntensity;
+        vec3 colorAfterLighting = (ambient + diffuse + specular) * fragColor.rgb;
 
         if(u_TextureState != 0.0f) {
             // Sample the texture using the texture coordinates
