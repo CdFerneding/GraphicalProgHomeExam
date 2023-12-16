@@ -18,6 +18,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <unordered_map>
 #include <iostream>
+// std::time should be standart cpp function, but the build pipeline does not seem to find it so:
+#include <ctime>
+#include <cstdlib> 
 
 HomeExamApplication* HomeExamApplication::current_application = nullptr;
 
@@ -58,11 +61,11 @@ void HomeExamApplication::key_callback(GLFWwindow* window, int key, int scancode
         case GLFW_KEY_ESCAPE:
             glfwSetWindowShouldClose(window, GLFW_TRUE);
             break;
-            // exit program
+        // exit program
         case GLFW_KEY_Q:
             getHomeExamApplication()->exit();
             break;
-            // handle camera changes
+        // handle camera changes
         case GLFW_KEY_S:
             getHomeExamApplication()->zoom(1.0f);
             break;
@@ -72,13 +75,12 @@ void HomeExamApplication::key_callback(GLFWwindow* window, int key, int scancode
         case GLFW_KEY_D:
             getHomeExamApplication()->rotate(5);
             break;
-        case GLFW_KEY_A:
+        case GLFW_KEY_A:    
             getHomeExamApplication()->rotate(-5);
             // counter-clockwise rotation
             break;
-            // handle unit selection
         case GLFW_KEY_T:
-            // getHomeExamApplication()->setTextureState();
+            getHomeExamApplication()->setTextureState();
             break;
         default:
             break;
