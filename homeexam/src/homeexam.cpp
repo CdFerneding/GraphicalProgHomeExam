@@ -424,17 +424,9 @@ unsigned HomeExamApplication::Run() {
     // Shader setup for the grid and cube
     //
     //--------------------------------------------------------------------------------------------------------------
-    // grid shader
-    auto* shaderGrid = new Shader(VS_Grid, FS_Grid);
-    shaderGrid->Bind();
-
-    // cube shader
-    auto* shaderCube = new Shader(VS_Cube, FS_Cube);
-    shaderCube->Bind();
-
-    // sun shader
-    auto* shaderSun = new Shader(VS_Sun, FS_Sun);
-    shaderSun->Bind();
+    std::unique_ptr<Shader> shaderGrid = std::make_unique<Shader>(VS_Grid, FS_Grid);
+    std::unique_ptr<Shader> shaderCube = std::make_unique<Shader>(VS_Cube, FS_Cube);
+    std::unique_ptr<Shader> shaderSun = std::make_unique<Shader>(VS_Sun, FS_Sun);
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -703,26 +695,6 @@ unsigned HomeExamApplication::Run() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    //--------------------------------------------------------------------------------------------------------------
-    //
-    // OpenGL cleanup
-    //
-    // theoretically not neccessary since destructors should be called automatically after variables go out of scope
-    // but you never know with OpenGL
-    //--------------------------------------------------------------------------------------------------------------
-
-    // Cleanup Grid Buffers
-    shaderGrid->~Shader();
-    VAO_Grid->~VertexArray();
-    VBO_Grid->~VertexBuffer();
-    IBO_Grid->~IndexBuffer();
-
-    // Cleanup Unit Buffers
-    shaderCube->~Shader();
-    VAO_Cube->~VertexArray();
-    VBO_Cube->~VertexBuffer();
-    IBO_Cube->~IndexBuffer();
 
     return stop();
 }
