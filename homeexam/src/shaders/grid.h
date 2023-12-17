@@ -75,7 +75,7 @@ const std::string FS_Grid = R"(
 
             // Mix the color from the vertex attribute with the texture color
             // Adjust the alpha value manually
-            vec4 mixedColor = mix(texColor, vec4(colorAfterLighting, fragColor.a), 0.6);
+            vec4 mixedColor = mix(texColor, vec4(colorAfterLighting, fragColor.a), 0.7);
 
             // Output the final color
             color = mixedColor;

@@ -70,7 +70,7 @@ const std::string FS_Cube = R"(
         if(u_TextureState != 0.0f) {
              //Sample the texture using the texture coordinates
              vec4 texColor = texture(CubeMap, TexCoords);
-             color = mix(vec4(texColor.rgb, u_Opacity), vec4(colorAfterLighting, 1.0), 0.5);
+             color = mix(vec4(texColor.rgb, u_Opacity), vec4(colorAfterLighting, u_Opacity), 0.7);
         } else {
             color = vec4(colorAfterLighting, u_Opacity);
         }
