@@ -53,14 +53,8 @@ target_include_directories(linmath INTERFACE external/linmath.h)
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE external/stb)
 
-# Add a subdirectory for a framework. This line is commented out, possibly because the
-# framework is either under development or optional.
+# Add a subdirectory for a framework.
 add_subdirectory(framework)
 
-# Add a subdirectory for assignments. Like the framework, this is commented out,
-# potentially to be enabled later when assignments are ready.
-add_subdirectory(assignment)
-
-# Add a subdirectory for homeexam. Like the framework, this is commented out,
-# potentially to be enabled later when assignments are ready.
+# Add a subdirectory for homeexam.
 add_subdirectory(homeexam)

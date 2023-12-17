@@ -3,18 +3,14 @@
 # all the features that are required.
 cmake_minimum_required(VERSION 3.15)
 
-# Declare a new project named 'tuto_lab1_glfw'. This sets various variables
-# related to the project and provides a context for the following CMake
-# commands.
+# Declare a new project named
 project(homeexam)
 
-# Add an executable target named 'tuto_lab1_glfw' that is built from the source
-# file 'main.cpp'. This means that CMake will generate build rules to compile
-# 'main.cpp' and link it into an executable program named 'tuto_lab1_glfw'.
+# Add an executable
 add_executable(homeexam src/main.cpp src/homeexam.cpp src/homeexam.h "src/shaders/grid.h"  "src/shaders/cube.h" "src/shaders/sun.h")
 
-# Specify libraries to link with the 'tuto_lab1_glfw' target.
-# This tells CMake that when it's linking 'tuto_lab1_glfw', it should also
+# Specify libraries
+# This tells CMake that when it's linking it should also
 # link the following libraries:
 # - glfw: This is a windowing library commonly used with OpenGL.
 # - glad: A library to load OpenGL extensions.
@@ -35,9 +31,6 @@ string(REPLACE "/" "\/" ESCAPED_TEXTURES_PATH ${TEXTURES_PATH})
 # "this compile definition is exquivalent to having for example:
 # #define TEXTURES_DIR "/home/whatever/labs/build/bin/resources/textures/""
 target_compile_definitions(${PROJECT_NAME} PUBLIC TEXTURES_DIR="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/textures/")
-
-# Custom command to copy the 'cat.png' texture to the expected build directory after the build
-# This ensures that the texture is available at runtime, regardless of where the executable is invoked from
 
 # Custom command to copy all files from the 'textures' directory
 add_custom_command(

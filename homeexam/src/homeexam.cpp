@@ -229,6 +229,15 @@ void HomeExamApplication::setupWarehouse(int numOfPillars, int numOfBoxes, int n
         int randomX = rand() % 8 + 1;
         int randomY = rand() % 8 + 1;
         int tileIndex = randomX * 10 + randomY;
+        
+        // restrict pillar spawning to ensure the game is solvable. No threat of outOfBounds because there will always be the walls.
+        // this checks if pillars are already existent in a ring around the current tile (pillar candidate)
+        // this eliminates the possibility of pillars trapping a box or box destination
+        if (GridState[tileIndex + 1].hasPillar || GridState[tileIndex - 1].hasPillar 
+            || GridState[tileIndex - 10].hasPillar || GridState[tileIndex - 9].hasPillar || GridState[tileIndex - 11].hasPillar
+            || GridState[tileIndex + 10].hasPillar || GridState[tileIndex + 9].hasPillar || GridState[tileIndex + 11].hasPillar)
+            continue;
+
         if (!GridState[tileIndex].hasObstacle && !GridState[tileIndex].hasPillar) {
             GridState[tileIndex].hasPillar = true;
             pillarCounter++;
@@ -241,9 +250,32 @@ void HomeExamApplication::setupWarehouse(int numOfPillars, int numOfBoxes, int n
     int boxCounter = 0;
     while (boxCounter < numOfBoxes) {
         // make box the only object in the game that spawns within 6x6 grid to make the game solvable (since you are only allowed to push boxes)
+        // this prevents boxes from spawning next to a wall of the warehouse
         int randomX = rand() % 6 + 2;
         int randomY = rand() % 6 + 2;
         int tileIndex = randomX * 10 + randomY;
+
+        // ensure boxes spawn does not make the game unsolvable
+        // this checks a square with includes the current tileposition: if a box spawns in a square like formation... 
+        // together with other boxes or pillars the formation is unmovable therefore breaking the game
+        // this is extremely hard to test as this spawn has a low change of happening
+        // It may be that I wont include this test in the final solution as it is computationally intensive (on game start) while not being incredibly rewarding
+        // it also does not break the game so I will keep it
+        if ((GridState[tileIndex + 1].hasBox || GridState[tileIndex + 1].hasPillar) &&
+            (GridState[tileIndex + 10].hasBox || GridState[tileIndex + 10].hasPillar) &&
+            (GridState[tileIndex + 11].hasBox || GridState[tileIndex + 11].hasPillar) &&
+            (GridState[tileIndex - 1].hasBox || GridState[tileIndex - 1].hasPillar) &&
+            (GridState[tileIndex + 10].hasBox || GridState[tileIndex + 10].hasPillar) &&
+            (GridState[tileIndex + 9].hasBox || GridState[tileIndex + 9].hasPillar) &&
+            (GridState[tileIndex + 1].hasBox || GridState[tileIndex + 1].hasPillar) &&
+            (GridState[tileIndex - 10].hasBox || GridState[tileIndex - 10].hasPillar) &&
+            (GridState[tileIndex - 11].hasBox || GridState[tileIndex - 11].hasPillar) &&
+            (GridState[tileIndex - 10].hasBox || GridState[tileIndex - 10].hasPillar) &&
+            (GridState[tileIndex - 9].hasBox || GridState[tileIndex - 9].hasPillar))
+        {
+            continue;
+        }
+
         if (!GridState[tileIndex].hasObstacle && !GridState[tileIndex].hasPillar && !GridState[tileIndex].hasBox) {
             GridState[tileIndex].hasBox = true;
             boxCounter++;
@@ -424,17 +456,9 @@ unsigned HomeExamApplication::Run() {
     // Shader setup for the grid and cube
     //
     //--------------------------------------------------------------------------------------------------------------
-    // grid shader
-    auto* shaderGrid = new Shader(VS_Grid, FS_Grid);
-    shaderGrid->Bind();
-
-    // cube shader
-    auto* shaderCube = new Shader(VS_Cube, FS_Cube);
-    shaderCube->Bind();
-
-    // sun shader
-    auto* shaderSun = new Shader(VS_Sun, FS_Sun);
-    shaderSun->Bind();
+    std::unique_ptr<Shader> shaderGrid = std::make_unique<Shader>(VS_Grid, FS_Grid);
+    std::unique_ptr<Shader> shaderCube = std::make_unique<Shader>(VS_Cube, FS_Cube);
+    std::unique_ptr<Shader> shaderSun = std::make_unique<Shader>(VS_Sun, FS_Sun);
 
     //--------------------------------------------------------------------------------------------------------------
     //
@@ -463,13 +487,26 @@ unsigned HomeExamApplication::Run() {
     // Give the textures to the shader
     GLuint gridTexture = textureManager->GetUnitByName("gridTexture");
 
-    // Load Cube Map
-    //TODO: loading the wood texture (all textures exept black-tile) does not work for the cubemap (whyever that might be).
-    bool successCube = textureManager->LoadCubeMapRGBA("cubeTexture", "resources/textures/cube_texture.png", 1, true);
+    // Load Rune Cube Map
+    bool successCube = textureManager->LoadCubeMapRGBA("runeTexture", "resources/textures/cube_texture.png", 1, true);
     if (!successCube) {
         std::cout << "Cube Map not loaded correctly." << std::endl;
     }
-    GLuint unitTexture = textureManager->GetUnitByName("cubeTexture");
+    GLuint runeCubeMap = textureManager->GetUnitByName("runeTexture");
+
+    // Load black marmor Cube Map
+    successCube = textureManager->LoadCubeMapRGBA("blackMarmorTexture", "resources/textures/black-tile.jpg", 2, true);
+    if (!successCube) {
+        std::cout << "Cube Map not loaded correctly." << std::endl;
+    }
+    GLuint blackMarmorCubeMap = textureManager->GetUnitByName("blackMarmorTexture");
+
+    // Load wood Cube Map
+    successCube = textureManager->LoadCubeMapRGBA("woodTexture", "resources/textures/floor_texture.png", 3, true);
+    if (!successCube) {
+        std::cout << "Cube Map not loaded correctly." << std::endl;
+    }
+    GLuint woodCubeMap = textureManager->GetUnitByName("woodTexture");
 
 
     glEnable(GL_MULTISAMPLE);
@@ -626,7 +663,12 @@ unsigned HomeExamApplication::Run() {
             shaderCube->UploadUniformFloat3("u_LightColor", lightColor); 
             shaderCube->UploadUniformFloat3("u_LightPosition", lightPosition);
             shaderCube->UploadUniformFloat3("u_ViewPos", camera.GetPosition());
-            shaderCube->UploadUniform1i("CubeMap", unitTexture);
+            if (tile.hasPillar || tile.hasObstacle)
+                shaderCube->UploadUniform1i("CubeMap", blackMarmorCubeMap);
+            else if (tile.hasBox)
+                shaderCube->UploadUniform1i("CubeMap", woodCubeMap);
+            else
+                shaderCube->UploadUniform1i("CubeMap", runeCubeMap);
             RenderCommands::DrawIndex(GL_TRIANGLES, VAO_Cube);
         }
 
@@ -703,26 +745,6 @@ unsigned HomeExamApplication::Run() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    //--------------------------------------------------------------------------------------------------------------
-    //
-    // OpenGL cleanup
-    //
-    // theoretically not neccessary since destructors should be called automatically after variables go out of scope
-    // but you never know with OpenGL
-    //--------------------------------------------------------------------------------------------------------------
-
-    // Cleanup Grid Buffers
-    shaderGrid->~Shader();
-    VAO_Grid->~VertexArray();
-    VBO_Grid->~VertexBuffer();
-    IBO_Grid->~IndexBuffer();
-
-    // Cleanup Unit Buffers
-    shaderCube->~Shader();
-    VAO_Cube->~VertexArray();
-    VBO_Cube->~VertexBuffer();
-    IBO_Cube->~IndexBuffer();
 
     return stop();
 }
