@@ -31,7 +31,6 @@ HomeExamApplication::HomeExamApplication(const std::string& name, const std::str
     currentXSelected = 0;
     currentYSelected = 0;
 
-    hasMoved = false;
     moveCounter = 0;
 
     toggleTexture = 0.0f;
@@ -96,7 +95,6 @@ void HomeExamApplication::setTextureState() {
   same for Y Selected. 
  */
 void HomeExamApplication::move(Direction direction) {
-    hasMoved = true;
     TileInfo nextTile;
     TileInfo* nextTileAfter = nullptr;
     switch (direction) {
@@ -106,8 +104,8 @@ void HomeExamApplication::move(Direction direction) {
         if (currentYSelected < 8) {
             nextTileAfter = &GridState[currentXSelected * 10 + currentYSelected + 2];
         }
-        if (nextTile.hasObstacle || nextTile.hasPillar) break;
-        if (nextTile.hasBox) {
+        if (nextTile.hasObstacle || nextTile.hasPillar) break; // cancel movement if next block is an obstacle
+        if (nextTile.hasBox) { // the next tile is a box. The following lines check if the box can be moved
             if (nextTileAfter == nullptr) {
                 break;
             }
@@ -116,7 +114,7 @@ void HomeExamApplication::move(Direction direction) {
                 GridState[currentXSelected * 10 + currentYSelected + 2].hasBox = true;
             }
             else {
-                break;
+                break; // cancel movement if the tile behind the box has a box, wall or pillar standing on it
             }
         }
         currentYSelected++;
@@ -186,7 +184,6 @@ void HomeExamApplication::move(Direction direction) {
         moveCounter++;
         break;
     default:
-        hasMoved = false;
         break;
     }
 }
@@ -395,7 +392,7 @@ unsigned HomeExamApplication::Run() {
 
     //--------------------------------------------------------------------------------------------------------------
     //
-    //  define vertices and indices for the grid, selectionSquare and the unit
+    //  define vertices and indices for the grid and cube
     //
     //--------------------------------------------------------------------------------------------------------------
     auto gridVertices = GeometricTools::UnitGridGeometry2DWTCoords(numberOfSquare);
@@ -407,18 +404,18 @@ unsigned HomeExamApplication::Run() {
 
     //--------------------------------------------------------------------------------------------------------------
     //
-    //  define the layout for the grid, selectionSquare and the unit
+    //  define the layout for the grid and cube
     //
     //--------------------------------------------------------------------------------------------------------------
 
-    // grid Layout
+    // grid layout
     auto gridLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false},
         {ShaderDataType::Float4, "color", false},
         {ShaderDataType::Float2, "texCoords", false},
         }));
 
-    // cube Layout
+    // cube layout
     auto cubeLayout = std::make_shared<BufferLayout>(BufferLayout({
         {ShaderDataType::Float3, "position", false},
         {ShaderDataType::Float3, "normal", false} // the norm vector (used for diffuse lighting)
@@ -439,7 +436,7 @@ unsigned HomeExamApplication::Run() {
     auto IBO_Grid = std::make_shared<IndexBuffer>(gridIndices.data(), static_cast<GLsizei>(gridIndices.size()));
     VAO_Grid->SetIndexBuffer(IBO_Grid);
 
-    // VAO Unit
+    // VAO Cube
     auto VAO_Cube = std::make_shared<VertexArray>();
     VAO_Cube->Bind();
     auto VBO_Cube = std::make_shared<VertexBuffer>(cubeVertices.data(),
@@ -526,7 +523,6 @@ unsigned HomeExamApplication::Run() {
     // Renderloop variables
     glm::mat4 cubeModel = glm::mat4(1.0f);
 
-    hasMoved = true;
     bool setup = true; // for units in first iteration
     bool isGameWon = false;
 
@@ -553,19 +549,6 @@ unsigned HomeExamApplication::Run() {
         // lighting
         //
         //--------------------------------------------------------------------------------------------------------------
-
-        // inside the corresponding shaders I added:
-        // 
-        // ambient lighting (simple form of global illumination)
-        // global illumination describes the fact that objects will often still have some light
-        // even if the don't see the light source directly due to reflection on other objects in the scene
-        // 
-        // diffuse lighting 
-        // lets a fragment shine brither the close it is to the light source: calculates the angle between vertex and light source
-        // the (non-uniform) scaling I am using does not affect the normal vectors because all objects are cubes. 
-        // The normal vectors for the grid shader will always be up (assuming the light source is above the grid))
-        //
-        // specular lighting takes the viewer Position into account
         
         // change the light's position values over time (glfwGetTime returns the elapsed time in seconds)
         float radius = 2.0f;
@@ -663,6 +646,7 @@ unsigned HomeExamApplication::Run() {
             shaderCube->UploadUniformFloat3("u_LightColor", lightColor); 
             shaderCube->UploadUniformFloat3("u_LightPosition", lightPosition);
             shaderCube->UploadUniformFloat3("u_ViewPos", camera.GetPosition());
+            // upload corresponding cubemap
             if (tile.hasPillar || tile.hasObstacle)
                 shaderCube->UploadUniform1i("CubeMap", blackMarmorCubeMap);
             else if (tile.hasBox)
@@ -681,7 +665,6 @@ unsigned HomeExamApplication::Run() {
 
         // helper
         float sideLength = 2.0f / static_cast<float>(numberOfSquare);
-        // HINT: board position (0,0) is the bottom Right
         float bottomRight = numberOfSquare * sideLength - 1;
 
         // translating square
@@ -718,7 +701,7 @@ unsigned HomeExamApplication::Run() {
         cubeModel = glm::translate(cubeModel, lightPosition);
         cubeModel = glm::scale(cubeModel, glm::vec3(0.4));
         
-        // bind square buffer, upload square uniforms and draw square
+        // bind buffer, upload uniforms and draw 
         VAO_Cube->Bind();
         shaderSun->Bind();
         shaderSun->UploadUniformMatrix4fv("u_Model", cubeModel* camera.GetViewProjectionMatrix());
@@ -728,7 +711,7 @@ unsigned HomeExamApplication::Run() {
 
         //--------------------------------------------------------------------------------------------------------------
         //
-        // check wincondition
+        // check win condition
         //
         //--------------------------------------------------------------------------------------------------------------
         int correctBoxCounter = 0;
