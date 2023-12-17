@@ -48,11 +48,7 @@ private:
 
     PerspectiveCamera camera; //The perspective camera used
 
-    bool hasMoved; // True when the player is moving the selection square
-    bool isUnitSelected;
     float toggleTexture; // toggle functionality to activate/deactivate textures and blending
-
-    std::array<int, 2> moveUnitFrom; // Contain the previous position of the selected cube, (-1,-1) otherwise
 
     const unsigned int numberOfSquare = 10; // The number of square on the grid
 
